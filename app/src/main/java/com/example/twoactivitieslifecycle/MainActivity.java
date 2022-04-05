@@ -1,98 +1,77 @@
 package com.example.twoactivitieslifecycle;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import org.w3c.dom.Text;
+
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
-    private EditText mMessageEditText;
-
-    public static final int TEXT_REQUEST =1;
-
-    private TextView mReplyHeadTextView;
-    private TextView mReplyTextView;
-
-
-    private static final String LOG_TAG =MainActivity.class.getSimpleName();
-    public static  final String Extra_MESSAGE = "com.example.android.twoactivities.extra.MESSAGE";
-
+    public static final int TEXT_REQUEST = 1;
+    private ShopList items = new ShopList();
+    public MainActivity() {
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // Log the start of the onCreate() method.
-        Log.d(LOG_TAG, "-------");
-        Log.d(LOG_TAG, "onCreate");
-        mMessageEditText =findViewById(R.id.editText_main);
-        mReplyHeadTextView = findViewById(R.id.text_header_reply);
-        mReplyTextView = findViewById(R.id.text_message_reply);
 
-    }
-
-    public void launchSecondActivity(View view) {
-        Log.d(LOG_TAG, "Button clicked!");
-        Intent intent = new Intent(this, SecondActivity.class);
-        String message = mMessageEditText.getText().toString();
-        intent.putExtra(Extra_MESSAGE, message);
-        startActivityForResult(intent, TEXT_REQUEST);
-
-    }
-    @Override
-    public void onActivityResult(int requestCode,
-                                 int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == TEXT_REQUEST) {
-            if (resultCode == RESULT_OK) {
-                String reply =
-                        data.getStringExtra(SecondActivity.EXTRA_REPLY);
-                mReplyHeadTextView.setVisibility(View.VISIBLE);
-                mReplyTextView.setText(reply);
-                mReplyTextView.setVisibility(View.VISIBLE);
+        Intent intent = getIntent();
+        if ((savedInstanceState != null)&& (savedInstanceState.getSerializable("list")!= null)){
+            HashMap<String, Integer> l = (HashMap<String, Integer>)savedInstanceState.getSerializable("list");
+            TextView tv = findViewById(R.id.textView);
+            tv.setText("");
+            for (String k : l.keySet()) {
+                String s = l.get(k).toString() + " " + k + "\n";
+                tv.setText(tv.getText() + s);
+                for(int i = 0; i<l.get(k); i++){
+                    items.addItem(k);}
             }
         }
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.d(LOG_TAG, "onStart");
+    public void launchSecondActivity(View view) {
+
+        Intent intent = new Intent(this, SecondActivity.class);
+
+        startActivityForResult(intent, TEXT_REQUEST);
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        Log.d(LOG_TAG, "onPause");
+    protected void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putSerializable("list", items.getItems());
     }
 
     @Override
-    protected void onRestart() {
-        super.onRestart();
-        Log.d(LOG_TAG, "onRestart");
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == TEXT_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                String item = data.getStringExtra(SecondActivity.EXTRA_MESSAGE);
+                items.addItem(item);
+            }
+            drawView();
+        }
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.d(LOG_TAG, "onResume");
+    public void drawView() {
+        HashMap<String, Integer> l = items.getItems();
+        TextView tv = findViewById(R.id.textView);
+        tv.setText("");
+        for (String k : l.keySet()) {
+            String s = l.get(k).toString() + " " + k + "\n";
+            tv.setText(tv.getText() + s);
+        }
     }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        Log.d(LOG_TAG, "onStop");
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d(LOG_TAG, "onDestroy");
-    }
-
 }
